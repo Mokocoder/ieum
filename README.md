@@ -1,3 +1,5 @@
+<div align="center">
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
   <img src="assets/logo.svg" alt="" width="120">
@@ -6,6 +8,8 @@
 # 이음
 
 한국어 문장으로 쓰는 프로그래밍 언어입니다.
+
+</div>
 
 ```ieum
 `수`를 팩토리얼구하는 법:
@@ -30,6 +34,14 @@
 사과, 배, 감
 하나
 ```
+
+<div align="center">
+
+<img src="assets/example-records.png" alt="자료형과 편집기 설명" width="640">
+
+<img src="assets/example-python.png" alt="파이썬 연동" width="640">
+
+</div>
 
 ## 설치
 

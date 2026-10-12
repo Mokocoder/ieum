@@ -1,0 +1,45 @@
+{
+  "comments": {
+    "lineComment": "#"
+  },
+  "brackets": [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"]
+  ],
+  "autoClosingPairs": [
+    { "open": "(", "close": ")", "notIn": ["string", "comment"] },
+    { "open": "[", "close": "]", "notIn": ["string", "comment"] },
+    { "open": "{", "close": "}", "notIn": ["comment"] },
+    { "open": "\"", "close": "\"", "notIn": ["string", "comment"] },
+    { "open": "'", "close": "'", "notIn": ["string", "comment"] },
+    { "open": "`", "close": "`", "notIn": ["string", "comment"] }
+  ],
+  "surroundingPairs": [
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"],
+    ["\"", "\""],
+    ["'", "'"],
+    ["`", "`"]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": ":\\s*(#.*)?$",
+    "decreaseIndentPattern": "^\\s*(그렇지 않으면|그렇지 않고|마지막으로|오류를 \\S+ 받으면)"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": ":\\s*(#.*)?$",
+      "action": { "indent": "indent" }
+    },
+    {
+      "beforeText": "^\\s+((.*\\s)?반환한다|반복을 중단한다|다음으로 진행한다|오류를 다시 발생시킨다|오류 .*발생시킨다|실행을 .*끝낸다)\\.\\s*(#.*)?$",
+      "action": { "indent": "outdent" }
+    }
+  ],
+  "folding": { "offSide": true },
+  "wordPattern": {
+    "pattern": "`[^`\\s]*`|[\\p{L}\\p{M}\\p{N}_]+",
+    "flags": "u"
+  }
+}

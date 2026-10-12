@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-7.1 4.65 110.7 110.7" role="img">
+  <title>이음 파일</title>
+  <defs>
+    <clipPath id="rka"><circle cx="48.00" cy="72.00" r="13.75"/></clipPath>
+    <clipPath id="rkb"><circle cx="72.00" cy="48.00" r="13.75"/></clipPath>
+    <mask id="ra" maskUnits="userSpaceOnUse" x="-50" y="-50" width="220" height="220">
+      <rect x="-50" y="-50" width="220" height="220" fill="#fff"/>
+      <circle cx="72" cy="72" r="24" fill="none" stroke="#000" stroke-width="15" clip-path="url(#rka)"/>
+    </mask>
+    <mask id="rb" maskUnits="userSpaceOnUse" x="-50" y="-50" width="220" height="220">
+      <rect x="-50" y="-50" width="220" height="220" fill="#fff"/>
+      <circle cx="48" cy="48" r="24" fill="none" stroke="#000" stroke-width="15" clip-path="url(#rkb)"/>
+    </mask>
+  </defs>
+  <g fill="none" stroke-width="11">
+    <circle cx="72" cy="72" r="24" stroke="#d99a1e" mask="url(#rb)"/>
+    <circle cx="48" cy="48" r="24" stroke="#1f3c6e" mask="url(#ra)"/>
+  </g>
+</svg>

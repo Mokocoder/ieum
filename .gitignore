@@ -1,0 +1,7 @@
+/target/
+/예제-출력/
+CLAUDE.md
+AGENTS.md
+.claude/
+editors/vscode/node_modules/
+editors/vscode/*.vsix

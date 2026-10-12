@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="28" fill="#1f3c6e"/>
+  <svg x="10" y="27" width="108" height="74" viewBox="10 8 100 64">
+    <defs>
+    <clipPath id="ika"><circle cx="60.00" cy="55.87" r="16.91"/></clipPath>
+    <clipPath id="ikb"><circle cx="60.00" cy="24.13" r="16.91"/></clipPath>
+    <mask id="ia" maskUnits="userSpaceOnUse" x="-50" y="-50" width="220" height="220">
+      <rect x="-50" y="-50" width="220" height="220" fill="#fff"/>
+      <circle cx="78" cy="40" r="24" fill="none" stroke="#000" stroke-width="14" clip-path="url(#ika)"/>
+    </mask>
+    <mask id="ib" maskUnits="userSpaceOnUse" x="-50" y="-50" width="220" height="220">
+      <rect x="-50" y="-50" width="220" height="220" fill="#fff"/>
+      <circle cx="42" cy="40" r="24" fill="none" stroke="#000" stroke-width="14" clip-path="url(#ikb)"/>
+    </mask>
+  </defs>
+  <g fill="none" stroke-width="10">
+    <circle cx="78" cy="40" r="24" stroke="#d99a1e" mask="url(#ib)"/>
+    <circle cx="42" cy="40" r="24" stroke="#ffffff" mask="url(#ia)"/>
+  </g>
+  </svg>
+</svg>

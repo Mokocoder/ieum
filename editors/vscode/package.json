@@ -1,0 +1,137 @@
+{
+  "name": "ieum",
+  "displayName": "이음",
+  "description": "이음 실행, 자동 완성, 정의로 이동, 오류 표시, 코드 정리",
+  "version": "0.1.0",
+  "publisher": "ieum",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "main": "./extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "ieum",
+        "aliases": [
+          "이음",
+          "ieum"
+        ],
+        "extensions": [
+          ".이음"
+        ],
+        "icon": {
+          "light": "./icons/ieum-light.svg",
+          "dark": "./icons/ieum-dark.svg"
+        },
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ieum",
+        "scopeName": "source.ieum",
+        "path": "./syntaxes/ieum.tmLanguage.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "control",
+        "superType": "keyword",
+        "description": "흐름을 정하는 말"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "ieum",
+        "scopes": {
+          "control": ["keyword.control.ieum"],
+          "keyword": ["keyword.other.ieum"],
+          "function": ["entity.name.function.ieum"],
+          "function.defaultLibrary": ["support.function.builtin.ieum"],
+          "variable": ["variable.other.readwrite.ieum"],
+          "variable.readonly": ["variable.other.constant.ieum"],
+          "variable.readonly.defaultLibrary": ["constant.language.ieum"],
+          "parameter": ["variable.parameter.ieum"],
+          "property": ["variable.other.property.ieum"],
+          "type": ["entity.name.type.ieum"]
+        }
+      }
+    ],
+    "configuration": {
+      "title": "이음",
+      "properties": {
+        "ieum.server.path": {
+          "type": "string",
+          "default": "ieum",
+          "scope": "machine-overridable",
+          "description": "언어 서버와 실행에 쓸 ieum 프로그램의 경로입니다. 비워 두면 PATH에서 찾습니다."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "ieum.run",
+        "title": "현재 파일 실행",
+        "category": "이음",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ieum.repl",
+        "title": "대화형 실행 열기",
+        "category": "이음"
+      },
+      {
+        "command": "ieum.restartServer",
+        "title": "언어 서버 다시 시작",
+        "category": "이음"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "ieum.run",
+          "when": "resourceLangId == ieum",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ieum.run",
+          "when": "editorLangId == ieum"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "ieum.run",
+        "key": "ctrl+f5",
+        "when": "editorTextFocus && editorLangId == ieum && !inDebugMode"
+      }
+    ],
+    "configurationDefaults": {
+      "[ieum]": {
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "editor.detectIndentation": false,
+        "editor.wordBasedSuggestions": "off",
+        "editor.semanticHighlighting.enabled": true
+      }
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "9.0.1"
+  }
+}

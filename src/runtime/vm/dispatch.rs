@@ -159,11 +159,20 @@ impl<W: Write> Vm<'_, W> {
             Op::Compare(op) => {
                 let right = self.pop()?;
                 let left = self.pop()?;
-                let holds = match (&left, &right) {
-                    (Value::Int(a), Value::Int(b)) => op.holds(a.cmp(b)),
-                    _ => self.heap.compare(&left, op, &right, span!())?,
+                let value = match (&left, &right) {
+                    (Value::Int(a), Value::Int(b)) => Value::Bool(op.holds(a.cmp(b))),
+                    (Value::Python(_), _) | (_, Value::Python(_)) => {
+                        let roots = self
+                            .state
+                            .roots()
+                            .chain(left.handle())
+                            .chain(right.handle());
+                        self.heap
+                            .python_compare(&left, op, &right, roots, span!())?
+                    }
+                    _ => Value::Bool(self.heap.compare(&left, op, &right, span!())?),
                 };
-                self.push(Value::Bool(holds));
+                self.push(value);
             }
             Op::CompareOrFalse(op, target) => {
                 let right = self.pop()?;
@@ -294,6 +303,10 @@ impl<W: Write> Vm<'_, W> {
                         self.heap
                             .store_index(list, position as usize, value, span!())?;
                     }
+                    Value::Python(handle) => {
+                        self.heap
+                            .python_store_index(handle, &index, &value, span!())?;
+                    }
                     _ => return Err(internal(span!())),
                 }
             }
@@ -315,6 +328,10 @@ impl<W: Write> Vm<'_, W> {
                         let key = Key::Text(name.clone());
                         self.heap
                             .store_key(dictionary, key, original, value, roots, span!())?;
+                    }
+                    Value::Python(handle) => {
+                        self.heap
+                            .python_store_attribute(handle, name, &value, span!())?;
                     }
                     _ => return Err(internal(span!())),
                 }
@@ -699,6 +716,7 @@ impl<W: Write> Vm<'_, W> {
                     "문자열과 튜플의 원소는 바꿀 수 없습니다.",
                 ));
             }
+            Value::Python(_) => {}
             _ => return Err(type_error(span)),
         }
         Ok(())
@@ -712,6 +730,7 @@ impl<W: Write> Vm<'_, W> {
                 Ok(())
             }
             Value::Dict(_) if !is_reserved_dictionary_name(name) => Ok(()),
+            Value::Python(_) => Ok(()),
             target => {
                 self.heap
                     .read_attribute(&target, name, self.state.roots(), span)?;
@@ -737,7 +756,7 @@ impl<W: Write> Vm<'_, W> {
         ))
     }
 
-    fn start_iterator(&self, collection: Value, span: Span) -> Result<IteratorState> {
+    fn start_iterator(&mut self, collection: Value, span: Span) -> Result<IteratorState> {
         Ok(match collection {
             Value::List(handle) | Value::Tuple(handle) => IteratorState::List(handle, 0),
             Value::Dict(handle) | Value::Set(handle) => {
@@ -745,6 +764,10 @@ impl<W: Write> Vm<'_, W> {
             }
             Value::Text(handle) => {
                 IteratorState::Text(handle, self.heap.text_of(&collection, span)?, 0)
+            }
+            Value::Python(handle) => {
+                let roots = self.state.roots().chain([handle]);
+                IteratorState::Python(self.heap.python_iterator(handle, roots, span)?)
             }
             _ => return Err(type_error(span)),
         })
@@ -802,6 +825,10 @@ impl<W: Write> Vm<'_, W> {
                     *index = position + 1;
                     Next::Value(entry.original)
                 })
+            }
+            IteratorState::Python(handle) => {
+                let handle = *handle;
+                return self.heap.python_next(handle, self.state.roots(), span);
             }
         };
         Ok(match next {

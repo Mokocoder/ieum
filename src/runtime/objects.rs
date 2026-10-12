@@ -549,6 +549,7 @@ impl Heap {
                 };
                 Ok(self.list(handle, span)?.to_vec())
             }
+            Value::Python(handle) => self.python_items(*handle, roots, span),
             _ => self.items(value, span),
         }
     }

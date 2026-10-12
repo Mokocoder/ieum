@@ -269,6 +269,7 @@ natives! {
     RemoveFile = "파일지우다" [input(Object, Text)],
     Move = "옮기다" [input(Object, Text), arg(Direction, Text)],
     Run = "실행하다" [input(Object, Sequence)],
+    ImportPython = "파이썬에서 가져오다" [input(Object, Text)],
 }
 
 impl Native {
@@ -377,6 +378,10 @@ impl Native {
                     "확인한 조건이 거짓입니다.",
                 )),
             },
+            Self::ToInt | Self::ToFloat if matches!(args[0], Value::Python(_)) => {
+                let handle = args[0].handle().ok_or_else(|| internal(span))?;
+                heap.python_number(handle, self == Self::ToFloat, roots, span)
+            }
             Self::ToInt => {
                 let n = text::to_int(&args[0], heap, span)?;
                 heap.new_int(n, roots, span)
@@ -470,6 +475,22 @@ impl Native {
             Self::Union | Self::Intersection | Self::Difference | Self::IsSubset => {
                 collections::set_operation(self, &args[0], &args[1], heap, roots, span)
             }
+            Self::ImportPython => {
+                if !host.reach.system {
+                    return Err(Diagnostic::new(
+                        "E-PY-003",
+                        span,
+                        "이 실행에서는 파이썬을 쓸 수 없습니다.",
+                    ));
+                }
+                let name = text(heap, 0)?;
+                let file = match (name.ends_with(".py"), host.filesystem) {
+                    (false, _) => None,
+                    (true, Some(filesystem)) => Some(fs::module_file(filesystem, &name, span)?),
+                    (true, None) => return Err(fs::closed(span)),
+                };
+                heap.python_import(&name, file.as_deref(), roots, span)
+            }
             Self::JoinPath => {
                 let joined = fs::join(&text(heap, 0)?, &text(heap, 1)?, span)?;
                 heap.new_text(joined, roots, span)
@@ -483,13 +504,7 @@ impl Native {
             | Self::FindFiles
             | Self::RemoveFile
             | Self::Move => {
-                let filesystem = host.filesystem.ok_or_else(|| {
-                    Diagnostic::new(
-                        "E-FILE-003",
-                        span,
-                        "이 실행에서는 파일을 읽거나 쓸 수 없습니다.",
-                    )
-                })?;
+                let filesystem = host.filesystem.ok_or_else(|| fs::closed(span))?;
                 match fs::invoke(self, args, heap, filesystem, span)? {
                     fs::Outcome::Value(value) => Ok(value),
                     fs::Outcome::Text(text) => heap.new_text(text, roots, span),

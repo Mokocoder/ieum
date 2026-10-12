@@ -126,7 +126,10 @@ impl Parser<'_> {
             self.gap_after_previous()?;
             self.keyword("발생시킨다", Category::Flow)?;
             StatementKind::Throw(value)
-        } else if !constant && matches!(self.token().kind, Kind::Text(_)) && ends_with("가져온다")
+        } else if !constant
+            && matches!(self.token().kind, Kind::Text(_))
+            && tail.get(1).is_some_and(|t| t.word("에서"))
+            && ends_with("가져온다")
         {
             StatementKind::Import(self.import()?)
         } else if !constant && exits {

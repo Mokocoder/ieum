@@ -7,6 +7,7 @@ mod integer;
 pub(crate) mod objects;
 mod operations;
 mod parallel;
+mod python;
 pub(crate) mod render;
 #[cfg(test)]
 mod tests;

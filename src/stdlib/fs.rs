@@ -397,6 +397,22 @@ fn regular(metadata: io::Result<Metadata>) -> io::Result<()> {
     }
 }
 
+pub(super) fn closed(span: Span) -> Diagnostic {
+    Diagnostic::new(
+        "E-FILE-003",
+        span,
+        "이 실행에서는 파일을 읽거나 쓸 수 없습니다.",
+    )
+}
+
+pub(super) fn module_file(filesystem: &FileSystem, text: &str, span: Span) -> Result<PathBuf> {
+    let file = filesystem.resolve(text, span)?;
+    match regular(fs::metadata(&file)) {
+        Ok(()) => Ok(file),
+        Err(error) => Err(file_error(Native::ImportPython.name(), &file, error, span)),
+    }
+}
+
 fn file_error(action: &str, path: &Path, error: io::Error, span: Span) -> Diagnostic {
     Diagnostic::new(
         "E-FILE-001",

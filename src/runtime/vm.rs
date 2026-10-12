@@ -46,14 +46,16 @@ pub(super) enum IteratorState {
     Dict(Handle, usize, u64),
     Text(Handle, Rc<str>, usize),
     Count(Int, Int, bool),
+    Python(Handle),
 }
 
 impl IteratorState {
     fn handle(&self) -> Option<Handle> {
         match self {
-            Self::List(handle, _) | Self::Dict(handle, ..) | Self::Text(handle, ..) => {
-                Some(*handle)
-            }
+            Self::List(handle, _)
+            | Self::Dict(handle, ..)
+            | Self::Text(handle, ..)
+            | Self::Python(handle) => Some(*handle),
             Self::Count(..) => None,
         }
     }

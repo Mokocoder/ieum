@@ -136,6 +136,29 @@ fn errors_are_reported_where_they_happen() {
     assert_eq!(ieum::check(deep.as_bytes())[0].code, "E-LIMIT-001");
 }
 
+#[cfg(feature = "python")]
+#[test]
+fn python_files_import_beside_the_program_and_print_in_order() {
+    let dir = TempDir::new("python");
+    dir.put("짝.py", "값 = 21\n");
+    dir.put(
+        "도우미.py",
+        "import 짝\n\ndef 인사(이름):\n    print(f\"파이썬: {이름}\")\n    return 짝.값 * 2\n",
+    );
+    dir.put(
+        "시작.이음",
+        "\"이음: 시작\"을 출력한다.\n도우미는 (\"도우미.py\"를 파이썬에서 가져온 값)이다.\n((도우미의 인사)로 [\"하나\"]를 호출한 값)을 출력한다.\n",
+    );
+    assert_eq!(
+        ieum(&["시작.이음"], &dir.0, ""),
+        (
+            Some(0),
+            "이음: 시작\n파이썬: 하나\n42\n".into(),
+            String::new()
+        )
+    );
+}
+
 #[test]
 fn programs_reach_outside_only_when_allowed() {
     let dir = TempDir::new("reach");
@@ -149,6 +172,10 @@ fn programs_reach_outside_only_when_allowed() {
     assert_eq!(execute(write, &closed), "E-FILE-003");
     assert_eq!(execute(write, &open), "내용\n");
     assert_eq!(execute("[\"ieum\"]을 실행한다.\n", &closed), "E-PROC-003");
+    assert_eq!(
+        execute("\"math\"를 파이썬에서 가져온다.\n", &closed),
+        "E-PY-003"
+    );
     assert_eq!(
         execute("'http://127.0.0.1:9'에서 내려받는다.\n", &closed),
         "E-NET-003"

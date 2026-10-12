@@ -168,6 +168,9 @@ impl Heap {
             Value::Bool(false) => state.output.push_str("거짓"),
             Value::None => state.output.push_str("없음"),
             Value::Native(native) => state.output.push_str(&function_text(native.name())),
+            Value::Python(handle) => state
+                .output
+                .push_str(&self.python_text(*handle, nested, span)?),
         }
         Ok(())
     }

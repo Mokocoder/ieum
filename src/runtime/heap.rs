@@ -5,6 +5,7 @@ use num_bigint::BigInt;
 
 use super::code::{FunctionInfo, RecordInfo};
 use super::dictionary::Dictionary;
+use super::python::Foreign;
 use super::value::Value;
 use crate::diagnostic::{Diagnostic, ExecutionError, Result, Span, internal, memory};
 use crate::limits::{GC_MIN_BYTES, GC_MIN_OBJECTS, Limit, Limits};
@@ -48,12 +49,16 @@ pub(super) enum Object {
         record_type: Handle,
         values: Vec<Value>,
     },
+    #[cfg_attr(not(feature = "python"), allow(dead_code))]
+    Python(Foreign),
 }
 
 impl Object {
     fn width(&self) -> usize {
         match self {
-            Self::Text(_) | Self::Big(_) | Self::Cell(_) | Self::Error { .. } => 1,
+            Self::Text(_) | Self::Big(_) | Self::Cell(_) | Self::Error { .. } | Self::Python(_) => {
+                1
+            }
             Self::Globals { values, .. } => values.len(),
             Self::Function {
                 defaults, captures, ..
@@ -67,7 +72,7 @@ impl Object {
     fn edges(&self) -> impl Iterator<Item = Handle> + Clone + '_ {
         let none: &[Handle] = &[];
         let (owner, handles, values, optional, entries) = match self {
-            Self::Text(_) | Self::Big(_) => (None, none, None, None, None),
+            Self::Text(_) | Self::Big(_) | Self::Python(_) => (None, none, None, None, None),
             Self::Cell(value) => (None, none, None, Some(std::slice::from_ref(value)), None),
             Self::Globals { values, .. } => (None, none, None, Some(&values[..]), None),
             Self::Function {

@@ -10,7 +10,7 @@ use super::code::{
 use super::heap::{Handle, Heap, Object};
 use super::objects::CollectionKind;
 use super::value::{Constant, Int, Value};
-use crate::diagnostic::{ExecutionError, Result, Span, internal};
+use crate::diagnostic::{Diagnostic, ExecutionError, Result, Span, internal};
 use crate::stdlib::Native;
 use crate::syntax::ast::{Role, SignatureParameter};
 
@@ -173,6 +173,13 @@ impl Exporter<'_> {
             | Value::Error(handle)
             | Value::RecordType(handle)
             | Value::Record(handle) => Portable::Object(self.object(handle)?),
+            Value::Python(_) => {
+                return Err(Diagnostic::new(
+                    "E-PAR-002",
+                    self.span,
+                    "파이썬 값은 병렬 작업에 넘길 수 없습니다.",
+                ));
+            }
         })
     }
 
@@ -254,7 +261,7 @@ impl Exporter<'_> {
                 record_type: self.object(*record_type)?,
                 values: self.values(values)?,
             },
-            Object::Globals { .. } | Object::Text(_) | Object::Big(_) => {
+            Object::Globals { .. } | Object::Text(_) | Object::Big(_) | Object::Python(_) => {
                 return Err(internal(self.span));
             }
         };

@@ -2,7 +2,7 @@ use super::*;
 use crate::diagnostic::ExecutionError;
 use crate::syntax::{self, format_source};
 
-fn run(source: &str) -> (String, Option<&'static str>) {
+fn run(source: &str, options: &Options) -> (String, Option<&'static str>) {
     let mut output = Vec::new();
     let result = (|| {
         let parsed = syntax::parse_valid(source.as_bytes())?;
@@ -14,7 +14,7 @@ fn run(source: &str) -> (String, Option<&'static str>) {
         })?;
         let mut heap = Heap::new(Limits::default())?;
         heap.stress_gc = true;
-        let mut vm = program.vm(heap, &mut output, &Options::default())?;
+        let mut vm = program.vm(heap, &mut output, options)?;
         vm.run().or_else(ExecutionError::unless_success)?;
         vm.release();
         let roots: Vec<Handle> = vm.roots().collect();
@@ -26,12 +26,8 @@ fn run(source: &str) -> (String, Option<&'static str>) {
     (String::from_utf8(output).unwrap(), code)
 }
 
-#[test]
-fn programs_print_what_the_table_says() {
-    for case in include_str!("../../tests/programs.txt")
-        .split("=== ")
-        .skip(1)
-    {
+fn check_table(table: &str, options: &Options) {
+    for case in table.split("=== ").skip(1) {
         let (title, rest) = case.split_once('\n').unwrap();
         let (source, expected) = rest.split_once("---\n").unwrap();
         let (output, code) = match expected.rsplit_once("! ") {
@@ -40,13 +36,31 @@ fn programs_print_what_the_table_says() {
             }
             _ => (expected, None),
         };
-        assert_eq!(run(source), (output.to_owned(), code), "{title}");
+        assert_eq!(run(source, options), (output.to_owned(), code), "{title}");
         if let Ok(formatted) = format_source(source.as_bytes()) {
             assert_eq!(
-                run(&formatted),
+                run(&formatted, options),
                 (output.to_owned(), code),
                 "{title} 정리 후"
             );
         }
     }
+}
+
+#[test]
+fn programs_print_what_the_table_says() {
+    check_table(
+        include_str!("../../tests/programs.txt"),
+        &Options::default(),
+    );
+}
+
+#[cfg(feature = "python")]
+#[test]
+fn python_programs_print_what_the_table_says() {
+    let options = Options {
+        system: true,
+        ..Options::default()
+    };
+    check_table(include_str!("../../tests/python.txt"), &options);
 }

@@ -31,6 +31,8 @@ pub(crate) enum Value {
     Error(Handle),
     RecordType(Handle),
     Record(Handle),
+    #[cfg_attr(not(feature = "python"), allow(dead_code))]
+    Python(Handle),
 }
 
 const _: () = assert!(std::mem::size_of::<Value>() == 16);
@@ -131,7 +133,8 @@ impl Value {
             | Self::Dict(handle)
             | Self::Error(handle)
             | Self::RecordType(handle)
-            | Self::Record(handle) => Some(*handle),
+            | Self::Record(handle)
+            | Self::Python(handle) => Some(*handle),
             _ => None,
         }
     }
@@ -170,6 +173,7 @@ impl Value {
             Self::Error(_) => "오류",
             Self::RecordType(_) => "자료형",
             Self::Record(_) => "자료형 값",
+            Self::Python(_) => "파이썬 값",
         }
     }
 }

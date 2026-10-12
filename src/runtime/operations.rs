@@ -39,6 +39,7 @@ impl Heap {
                 .get(&self.key(index, span)?)
                 .copied()
                 .ok_or_else(|| missing_key(span)),
+            Value::Python(handle) => self.python_index(*handle, index, roots, span),
             _ => Err(type_error(span)),
         }
     }
@@ -72,6 +73,7 @@ impl Heap {
         match (op, value) {
             (UnaryOp::Not, value) => Ok(Value::Bool(!value.boolean(span)?)),
             (UnaryOp::Pos, value) if value.numeric() => Ok(*value),
+            (_, Value::Python(handle)) => self.python_unary(*handle, op, roots, span),
             (UnaryOp::Neg, value) => match self.number(value) {
                 Some(number) => self.new_number(number.negate(), roots, span),
                 None => Err(type_error(span)),
@@ -104,6 +106,9 @@ impl Heap {
             joined.push_str(&a);
             joined.push_str(&b);
             return self.new_text(joined, roots, span);
+        }
+        if matches!(left, Value::Python(_)) || matches!(right, Value::Python(_)) {
+            return self.python_binary(left, op, right, roots, span);
         }
         if op == BinOp::Mul && left_text != right_text {
             let (text, count) = if left_text {
@@ -189,6 +194,9 @@ impl Heap {
     }
 
     fn compare_scalars(&self, left: &Value, op: CmpOp, right: &Value, span: Span) -> Result<bool> {
+        if matches!(left, Value::Python(_)) || matches!(right, Value::Python(_)) {
+            return self.python_holds(left, op, right, span);
+        }
         let order = if let (Some(a), Some(b)) = (self.number(left), self.number(right)) {
             a.order(&b)
         } else if let (Some(a), Some(b)) = (self.text(left), self.text(right)) {
@@ -342,6 +350,9 @@ impl Heap {
         roots: impl Iterator<Item = Handle>,
         span: Span,
     ) -> Result<Value> {
+        if let Value::Python(handle) = owner {
+            return self.python_slice(*handle, bounds, roots, span);
+        }
         let text: Option<Rc<str>> = self.text(owner).cloned();
         let length = match (owner, &text) {
             (Value::List(handle) | Value::Tuple(handle), _) => self.list(*handle, span)?.len(),

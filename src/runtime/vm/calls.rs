@@ -9,7 +9,7 @@ use crate::runtime::code::{CallCache, CallSite, Callee};
 use crate::runtime::heap::Handle;
 use crate::runtime::value::Value;
 use crate::stdlib::{self, Native};
-use crate::syntax::ast::{Constraint, SignatureParameter};
+use crate::syntax::ast::{Constraint, Role, SignatureParameter};
 
 fn not_callable(span: Span) -> Diagnostic {
     Diagnostic::new("E-CALL-007", span, "호출할 수 있는 함수 값이 아닙니다.")
@@ -30,8 +30,47 @@ impl<W: Write> Vm<'_, W> {
         match self.state.thread.data[base] {
             Some(Value::Function(handle)) => self.call_function(site, handle, base, return_to),
             Some(Value::Native(native)) => self.call_native(site, native, base, return_to),
+            Some(Value::Python(handle)) => self.call_python(site, handle, base, return_to),
             _ => Err(not_callable(span)),
         }
+    }
+
+    fn call_python(
+        &mut self,
+        site: &CallSite,
+        handle: Handle,
+        base: usize,
+        return_to: usize,
+    ) -> Result<Control> {
+        let data = &self.state.thread.data;
+        let mut positional = if site.incoming { data[return_to] } else { None };
+        let mut keywords = None;
+        for (index, &(role, span)) in site.arguments.iter().enumerate() {
+            let value = data[base + 1 + index];
+            match role {
+                Role::Object if positional.is_none() => positional = value,
+                Role::Partner => keywords = value,
+                _ => {
+                    return Err(Diagnostic::new(
+                        "E-PY-004",
+                        span,
+                        "파이썬 함수에는 을/를 자리와 와/과 자리의 인자만 넘깁니다.",
+                    ));
+                }
+            }
+        }
+        let roots = self.state.roots();
+        let result = self.heap.python_call(
+            handle,
+            positional.as_ref(),
+            keywords.as_ref(),
+            roots,
+            site.span,
+        )?;
+        let thread = &mut self.state.thread;
+        thread.data.truncate(return_to);
+        thread.data.push(Some(result));
+        Ok(Control::Next)
     }
 
     fn cache(

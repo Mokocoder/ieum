@@ -18,6 +18,9 @@ impl Heap {
         span: Span,
     ) -> Result<Value> {
         let roots = roots.chain(target.handle());
+        if let Value::Python(handle) = target {
+            return self.python_attribute(*handle, name, roots, span);
+        }
         if let Some(text) = self.text(target).cloned() {
             if let Some(part) = path_attribute(&text, name, span) {
                 return match part? {

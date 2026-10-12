@@ -33,10 +33,11 @@
 
 ## 설치
 
-Rust 1.85 이상이 필요합니다.
+Rust 1.85 이상이 필요합니다. 파이썬 연동에는 빌드할 때와 실행할 때 PATH에 Python 3.8 이상이 있어야 합니다.
 
 ```sh
 cargo install --path .
+cargo install --path . --features python   # 파이썬 모듈을 쓰려면
 ```
 
 ```sh
@@ -78,5 +79,6 @@ ieum repl               # 대화형 실행
 | [로그집계](examples/로그집계.이음) | 문자열 나누기, 사전으로 세기, 정렬 |
 | [가계부](examples/가계부.이음) | 여러 줄 문자열, 서식으로 맞춘 표 |
 | [성적처리](examples/성적처리/시작.이음) | 여러 파일로 나눈 프로그램, CSV, 테스트 |
+| [파이썬연동](examples/파이썬연동/시작.이음) | numpy, pandas, `.py` 파일 가져오기. `--features python`으로 빌드해야 합니다 |
 
 파일을 쓰는 예제는 실행한 폴더의 `예제-출력` 아래에 씁니다.
